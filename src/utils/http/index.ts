@@ -13,9 +13,14 @@ import { stringify } from "qs";
 import { getToken, formatToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 
+// 根據環境動態設定後端 URL
+const API_BASE_URL = window.location.origin.includes('localhost')
+  ? 'http://localhost:3000'
+  : 'https://afterclass-application-backend.zeabur.app';
+
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || "",
+  baseURL: API_BASE_URL,
   // 请求超时时间
   timeout: 10000,
   headers: {
