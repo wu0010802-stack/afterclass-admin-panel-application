@@ -161,12 +161,14 @@ const handleUpdateRemark = async () => {
 
 const handlePayment = async (row: any) => {
     try {
-        const newStatus = !row.is_paid;
+        console.log("Toggling payment for:", row.id, "Current status:", row.is_paid);
+        const newStatus = !Boolean(row.is_paid);
         await togglePayment(row.id, { paid: newStatus });
         row.is_paid = newStatus;
         message(newStatus ? "已更新為已繳費" : "已更新為未繳費", { type: "success" });
         await fetchData();
     } catch (e) {
+        console.error("Payment toggle failed:", e);
         message("更新失敗", { type: "error" });
     }
 };
