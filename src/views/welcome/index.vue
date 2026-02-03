@@ -101,7 +101,6 @@ onMounted(() => {
 <template>
   <div class="welcome">
     <el-row :gutter="20" class="mb-5">
-    <el-row :gutter="20" class="mb-5">
       <!-- Total Registrations -->
       <el-col :span="6" :xs="24" :sm="12" :md="6">
         <el-card shadow="hover" class="stat-card primary-border" v-loading="loading">
@@ -158,7 +157,6 @@ onMounted(() => {
           <div class="stat-sub">報名達成率: {{ stats.enrollmentRate }}%</div>
         </el-card>
       </el-col>
-    </el-row>
     </el-row>
 
     <!-- Charts Row -->

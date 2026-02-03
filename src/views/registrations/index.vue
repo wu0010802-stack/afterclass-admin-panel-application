@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
-import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail, updateRemark } from "@/api/registrations";
+import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail, updateRemark, togglePayment } from "@/api/registrations";
 import { getClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { message } from "@/utils/message";
@@ -154,6 +154,17 @@ const handleUpdateRemark = async () => {
         if (item) {
             item.remark = currentDetail.value.remark;
         }
+    } catch (e) {
+        message("更新失敗", { type: "error" });
+    }
+};
+
+const handlePayment = async (row: any) => {
+    try {
+        const newStatus = !row.is_paid;
+        await togglePayment(row.id, { paid: newStatus });
+        row.is_paid = newStatus;
+        message(newStatus ? "已更新為已繳費" : "已更新為未繳費", { type: "success" });
     } catch (e) {
         message("更新失敗", { type: "error" });
     }
@@ -337,6 +348,17 @@ onMounted(() => {
                <el-tag v-for="(course, index) in (scope.row.course_names ? scope.row.course_names.split('、') : [])" :key="index" class="mr-1 mb-1" size="small">
                    {{ course }}
                </el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="is_paid" label="繳費狀態" width="100" align="center">
+            <template #default="scope">
+                <el-button 
+                    :type="scope.row.is_paid ? 'success' : 'info'" 
+                    size="small" 
+                    @click="handlePayment(scope.row)"
+                >
+                    {{ scope.row.is_paid ? '已繳費' : '未繳費' }}
+                </el-button>
             </template>
         </el-table-column>
         <el-table-column prop="remark" label="備註" min-width="150" show-overflow-tooltip />

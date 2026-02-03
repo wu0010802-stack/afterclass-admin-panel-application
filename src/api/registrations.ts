@@ -20,3 +20,7 @@ export const deleteWaitlist = (id: number) => {
 export const updateRemark = (id: number, data: { remark: string }) => {
     return http.request("put", `/admin/registration/${id}/remark`, { data });
 };
+
+export const togglePayment = (id: number, data: { paid: boolean }) => {
+    return http.request("put", `/admin/registration/${id}/payment`, { data });
+};
