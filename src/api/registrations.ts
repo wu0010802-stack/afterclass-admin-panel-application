@@ -16,3 +16,7 @@ export const deleteRegistration = (id: number) => {
 export const deleteWaitlist = (id: number) => {
     return http.request("delete", `/admin/waitlist/${id}`);
 };
+
+export const updateRemark = (id: number, data: { remark: string }) => {
+    return http.request("put", `/admin/registration/${id}/remark`, { data });
+};

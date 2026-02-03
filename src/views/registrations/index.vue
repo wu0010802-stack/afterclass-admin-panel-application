@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
-import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail } from "@/api/registrations";
+import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail, updateRemark } from "@/api/registrations";
 import { getClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { message } from "@/utils/message";
@@ -10,6 +10,7 @@ import Delete from "@iconify-icons/ep/delete";
 import View from "@iconify-icons/ep/view";
 import Download from "@iconify-icons/ep/download";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import * as XLSX from "xlsx";
 
 defineOptions({
   name: "RegistrationsList"
@@ -60,7 +61,6 @@ const fetchData = async () => {
     // Fetch registrations
     try {
         const regRes: any = await getRegistrations();
-        // Sanitize registration data
         const rawRegs = regRes.registrations || [];
         registrations.value = rawRegs.map((r: any) => ({
             id: r.id,
@@ -71,6 +71,7 @@ const fetchData = async () => {
             supply_count: r.supply_count,
             created_at: r.created_at,
             course_names: r.course_names ? String(r.course_names) : "",
+            remark: r.remark || "",
             type: r.type,
             status: r.status
         }));
@@ -144,9 +145,19 @@ const handleDelete = (row: any) => {
   });
 };
 
-import * as XLSX from "xlsx";
-
-// ... existing code ...
+const handleUpdateRemark = async () => {
+    try {
+        await updateRemark(currentDetail.value.id, { remark: currentDetail.value.remark });
+        message("備註更新成功", { type: "success" });
+        // Update the item in the list as well to reflect changes without refresh
+        const item = registrations.value.find((r: any) => r.id === currentDetail.value.id);
+        if (item) {
+            item.remark = currentDetail.value.remark;
+        }
+    } catch (e) {
+        message("更新失敗", { type: "error" });
+    }
+};
 
 const handleExportExcel = () => {
   const rows = filteredRegistrations.value.map((reg: any) => {
@@ -157,6 +168,7 @@ const handleExportExcel = () => {
       '課程數': reg.course_count,
       '用品數': reg.supply_count,
       '報名時間': reg.created_at ? new Date(reg.created_at).toLocaleString() : '',
+      '備註': reg.remark,
       '報名的課程': reg.course_names
     };
   });
@@ -171,6 +183,7 @@ const handleExportExcel = () => {
     { wch: 10 }, // Course Count
     { wch: 10 }, // Supply Count
     { wch: 25 }, // Time
+    { wch: 30 }, // Remark
     { wch: 50 }  // Courses
   ];
   worksheet['!cols'] = wscols;
@@ -181,10 +194,11 @@ const handleExportExcel = () => {
 };
 
 const handleExportCsv = () => {
-  const headers = ['ID', '學生姓名', '班級', '課程數', '用品數', '報名時間', '報名的課程'];
+  const headers = ['ID', '學生姓名', '班級', '課程數', '用品數', '報名時間', '備註', '報名的課程'];
 
   const rows = filteredRegistrations.value.map((reg: any) => {
     const courseNames = reg.course_names ? String(reg.course_names) : '';
+    const remark = reg.remark ? String(reg.remark) : '';
     return [
       reg.id,
       reg.student_name,
@@ -192,7 +206,8 @@ const handleExportCsv = () => {
       reg.course_count,
       reg.supply_count,
       reg.created_at,
-      `"${courseNames.replace(/"/g, '""')}"` // Escape double quotes
+      `"${remark.replace(/"/g, '""')}"`,
+      `"${courseNames.replace(/"/g, '""')}"`
     ];
   });
 
@@ -324,6 +339,7 @@ onMounted(() => {
                </el-tag>
             </template>
         </el-table-column>
+        <el-table-column prop="remark" label="備註" min-width="150" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="scope">
             <el-button 
@@ -346,6 +362,19 @@ onMounted(() => {
                 <el-descriptions-item label="Email">{{ currentDetail.email || '無' }}</el-descriptions-item>
                 <el-descriptions-item label="報名時間">{{ currentDetail.created_at ? new Date(currentDetail.created_at).toLocaleString() : '' }}</el-descriptions-item>
             </el-descriptions>
+            
+            <div class="mt-4">
+                <div class="flex items-center mb-2">
+                    <span class="font-bold mr-2">後台備註</span>
+                    <el-button type="primary" link size="small" @click="handleUpdateRemark">更新備註</el-button>
+                </div>
+                <el-input 
+                    v-model="currentDetail.remark" 
+                    type="textarea" 
+                    :rows="2" 
+                    placeholder="輸入備註事項..." 
+                />
+            </div>
             
             <div class="mt-4">
                 <h4 class="font-bold mb-2">已報名課程</h4>
