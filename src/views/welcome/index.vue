@@ -111,10 +111,10 @@ onMounted(() => {
           </template>
           <div class="stat-value">{{ stats.totalRegistrations }}</div>
           <div class="stat-sub">
-            總學生數: {{ stats.totalStudents }}
-            <span v-if="stats.todayNewRegistrations > 0" class="text-green-500 font-bold ml-1">
+            <span v-if="stats.todayNewRegistrations > 0" class="text-green-500 font-bold">
               (今日 +{{ stats.todayNewRegistrations }})
             </span>
+            <span v-else>&nbsp;</span>
           </div>
         </el-card>
       </el-col>
