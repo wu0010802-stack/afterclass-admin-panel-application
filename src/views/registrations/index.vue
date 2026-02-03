@@ -144,7 +144,43 @@ const handleDelete = (row: any) => {
   });
 };
 
-const handleExport = () => {
+import * as XLSX from "xlsx";
+
+// ... existing code ...
+
+const handleExportExcel = () => {
+  const rows = filteredRegistrations.value.map((reg: any) => {
+    return {
+      'ID': reg.id,
+      '學生姓名': reg.student_name,
+      '班級': reg.class_name || '未指定',
+      '課程數': reg.course_count,
+      '用品數': reg.supply_count,
+      '報名時間': reg.created_at ? new Date(reg.created_at).toLocaleString() : '',
+      '報名的課程': reg.course_names
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  
+  // Adjust column widths
+  const wscols = [
+    { wch: 6 },  // ID
+    { wch: 15 }, // Name
+    { wch: 20 }, // Class
+    { wch: 10 }, // Course Count
+    { wch: 10 }, // Supply Count
+    { wch: 25 }, // Time
+    { wch: 50 }  // Courses
+  ];
+  worksheet['!cols'] = wscols;
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+  XLSX.writeFile(workbook, `報名資料_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
+const handleExportCsv = () => {
   const headers = ['ID', '學生姓名', '班級', '課程數', '用品數', '報名時間', '報名的課程'];
 
   const rows = filteredRegistrations.value.map((reg: any) => {
@@ -182,6 +218,14 @@ const handleExport = () => {
   link.click();
 
   document.body.removeChild(link);
+};
+
+const handleExportCommand = (command: string) => {
+    if (command === 'excel') {
+        handleExportExcel();
+    } else {
+        handleExportCsv();
+    }
 };
 
 onMounted(() => {
@@ -237,7 +281,19 @@ onMounted(() => {
                clearable
              />
           </div>
-          <el-button type="success" :icon="useRenderIcon(Download)" @click="handleExport">匯出資料</el-button>
+          
+          <el-dropdown split-button type="success" @click="handleExportExcel" @command="handleExportCommand">
+            <span class="flex items-center">
+               <iconify-icon-offline :icon="Download" class="mr-1" />
+               匯出 Excel
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="excel">匯出 Excel (.xlsx)</el-dropdown-item>
+                <el-dropdown-item command="csv">匯出 CSV (.csv)</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </template>
 
