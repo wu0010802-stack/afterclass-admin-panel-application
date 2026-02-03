@@ -165,6 +165,7 @@ const handlePayment = async (row: any) => {
         await togglePayment(row.id, { paid: newStatus });
         row.is_paid = newStatus;
         message(newStatus ? "已更新為已繳費" : "已更新為未繳費", { type: "success" });
+        await fetchData();
     } catch (e) {
         message("更新失敗", { type: "error" });
     }
