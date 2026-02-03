@@ -6,6 +6,7 @@ export interface ListItem {
   description: string;
   status?: "primary" | "success" | "warning" | "info" | "danger";
   extra?: string;
+  rawDate?: string;
 }
 
 export interface TabItem {

@@ -20,7 +20,9 @@ const fetchData = async () => {
             title: `新報名：${reg.student_name}`,
             description: `班級：${reg.class_name}`,
             datetime: reg.created_at?.split('T')[0] || '',
-            type: "1"
+            type: "1",
+            // Store raw created_at for comparison
+            rawDate: reg.created_at
         }));
 
         notices.value = [
@@ -33,7 +35,15 @@ const fetchData = async () => {
         ];
         
         activeKey.value = "1";
-        noticesNum.value = list.length;
+
+        // Calculate unread count based on last read time from localStorage
+        const lastReadTime = localStorage.getItem('notice_last_read_time') || '0';
+        const unreadCount = list.filter(item => {
+             // @ts-ignore
+             return new Date(item.rawDate).getTime() > new Date(lastReadTime).getTime();
+        }).length;
+
+        noticesNum.value = unreadCount;
         
     } catch (error) {
         console.error("Failed to fetch notifications", error);
@@ -52,6 +62,8 @@ const getLabel = computed(
 const onVisibleChange = (val: boolean) => {
     if (val) {
         noticesNum.value = 0;
+        // Save current time as last read time
+        localStorage.setItem('notice_last_read_time', new Date().toISOString());
     }
 };
 </script>
