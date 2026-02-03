@@ -13,9 +13,11 @@ const stats = ref({
   totalStudents: 0,
   totalCourseEnrollments: 0,
   totalSupplyOrders: 0,
+  enrollmentRate: 0,
   totalRevenue: 0,
   totalUnpaid: 0,
-  totalWaitlist: 0
+  totalWaitlist: 0,
+  todayNewRegistrations: 0
 });
 
 const loading = ref(true);
@@ -99,6 +101,7 @@ onMounted(() => {
 <template>
   <div class="welcome">
     <el-row :gutter="20" class="mb-5">
+    <el-row :gutter="20" class="mb-5">
       <!-- Total Registrations -->
       <el-col :span="6" :xs="24" :sm="12" :md="6">
         <el-card shadow="hover" class="stat-card primary-border" v-loading="loading">
@@ -108,23 +111,15 @@ onMounted(() => {
             </div>
           </template>
           <div class="stat-value">{{ stats.totalRegistrations }}</div>
-          <div class="stat-sub">總學生數: {{ stats.totalStudents }}</div>
+          <div class="stat-sub">
+            總學生數: {{ stats.totalStudents }}
+            <span v-if="stats.todayNewRegistrations > 0" class="text-green-500 font-bold ml-1">
+              (今日 +{{ stats.todayNewRegistrations }})
+            </span>
+          </div>
         </el-card>
       </el-col>
       
-      <!-- Total Revenue -->
-      <el-col :span="6" :xs="24" :sm="12" :md="6">
-        <el-card shadow="hover" class="stat-card success-border" v-loading="loading">
-          <template #header>
-            <div class="card-header">
-              <span>預估總營收</span>
-            </div>
-          </template>
-          <div class="stat-value success-text">${{ stats.totalRevenue.toLocaleString() }}</div>
-          <div class="stat-sub">含已完成與未繳費</div>
-        </el-card>
-      </el-col>
-
       <!-- Unpaid Amount -->
       <el-col :span="6" :xs="24" :sm="12" :md="6">
         <el-card shadow="hover" class="stat-card danger-border" v-loading="loading">
@@ -150,6 +145,20 @@ onMounted(() => {
           <div class="stat-sub">等待名額釋出</div>
         </el-card>
       </el-col>
+
+      <!-- Course Enrollments & Rate -->
+      <el-col :span="6" :xs="24" :sm="12" :md="6">
+        <el-card shadow="hover" class="stat-card info-border" v-loading="loading">
+          <template #header>
+            <div class="card-header">
+              <span>報名課程數</span>
+            </div>
+          </template>
+          <div class="stat-value info-text">{{ stats.totalCourseEnrollments }}</div>
+          <div class="stat-sub">報名達成率: {{ stats.enrollmentRate }}%</div>
+        </el-card>
+      </el-col>
+    </el-row>
     </el-row>
 
     <!-- Charts Row -->
@@ -186,6 +195,7 @@ onMounted(() => {
 .success-border { border-left-color: #67C23A; }
 .danger-border { border-left-color: #F56C6C; }
 .warning-border { border-left-color: #E6A23C; }
+.info-border { border-left-color: #909399; }
 
 /* Values */
 .stat-value {
@@ -198,6 +208,7 @@ onMounted(() => {
 .success-text { color: #67C23A; }
 .danger-text { color: #F56C6C; }
 .warning-text { color: #E6A23C; }
+.info-text { color: #909399; }
 
 .stat-sub {
     font-size: 12px;
