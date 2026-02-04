@@ -4,7 +4,7 @@ import { type TabItem, type ListItem } from "./data";
 import NoticeList from "./components/NoticeList.vue";
 import BellIcon from "~icons/ep/bell";
 import { getRegistrations } from "@/api/registrations";
-import { getInquiries } from "@/api/inquiries";
+import { getInquiries, getRegistrationChanges } from "@/api/inquiries";
 
 const noticesNum = ref(0);
 const notices = ref<TabItem[]>([]);
@@ -12,31 +12,45 @@ const activeKey = ref("");
 
 const fetchData = async () => {
     try {
-        // Fetch registrations and inquiries in parallel
-        const [regRes, inqRes]: any[] = await Promise.all([
+        // Fetch all data in parallel
+        const [regRes, inqRes, changesRes]: any[] = await Promise.all([
             getRegistrations(),
-            getInquiries()
+            getInquiries(),
+            getRegistrationChanges()
         ]);
         
         const regs = regRes.registrations || [];
         const inquiries = inqRes.inquiries || [];
+        const changes = changesRes.changes || [];
         
-        // Build registration notifications (new + updates)
+        // Build NEW registration notifications only (not updates)
         const regList: ListItem[] = regs.slice(0, 15).map((reg: any) => {
-            // Check if this is an update (updated_at differs from created_at)
             const createdAt = reg.created_at ? new Date(reg.created_at).getTime() : 0;
             const updatedAt = reg.updated_at ? new Date(reg.updated_at).getTime() : 0;
-            const isUpdate = updatedAt > createdAt + 60000; // More than 1 minute difference = update
+            const isUpdate = updatedAt > createdAt + 60000;
+            
+            // Only show new registrations in this tab
+            if (isUpdate) return null;
             
             return {
                 avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + reg.student_name,
-                title: isUpdate ? `📝 資料修改：${reg.student_name}` : `🆕 新報名：${reg.student_name}`,
+                title: `🆕 新報名：${reg.student_name}`,
                 description: `班級：${reg.class_name}`,
-                datetime: (isUpdate ? reg.updated_at : reg.created_at)?.split('T')[0] || '',
+                datetime: reg.created_at?.split('T')[0] || '',
                 type: "1",
-                rawDate: isUpdate ? reg.updated_at : reg.created_at || ''
+                rawDate: reg.created_at || ''
             };
-        });
+        }).filter(Boolean) as ListItem[];
+        
+        // Build change notifications with DETAIL
+        const changeList: ListItem[] = changes.slice(0, 15).map((change: any) => ({
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + change.student_name,
+            title: `📝 ${change.change_type}：${change.student_name}`,
+            description: change.change_description,
+            datetime: change.created_at?.split('T')[0] || '',
+            type: "3",
+            rawDate: change.created_at || ''
+        }));
         
         // Build inquiry notifications
         const inqList: ListItem[] = inquiries.slice(0, 10).map((inq: any) => ({
@@ -52,9 +66,15 @@ const fetchData = async () => {
         notices.value = [
             {
                 key: "1",
-                name: "報名通知",
+                name: "新報名",
                 list: regList,
-                emptyText: "暫無報名通知"
+                emptyText: "暫無新報名"
+            },
+            {
+                key: "3",
+                name: "資料修改",
+                list: changeList,
+                emptyText: "暫無資料修改"
             },
             {
                 key: "2",
@@ -75,13 +95,19 @@ const fetchData = async () => {
             return new Date(item.rawDate).getTime() > new Date(lastReadTime).getTime();
         }).length;
         
-        // Count unread inquiries (either new since last read, or marked as unread in DB)
+        // Count unread changes
+        const unreadChanges = changeList.filter(item => {
+            // @ts-ignore
+            return new Date(item.rawDate).getTime() > new Date(lastReadTime).getTime();
+        }).length;
+        
+        // Count unread inquiries 
         const unreadInqs = inqList.filter(item => {
             // @ts-ignore
             return item.extra === '未讀' || new Date(item.rawDate).getTime() > new Date(lastReadTime).getTime();
         }).length;
 
-        noticesNum.value = unreadRegs + unreadInqs;
+        noticesNum.value = unreadRegs + unreadChanges + unreadInqs;
         
     } catch (error) {
         console.error("Failed to fetch notifications", error);
@@ -128,7 +154,7 @@ const onVisibleChange = (val: boolean) => {
           v-model="activeKey"
           :stretch="true"
           class="dropdown-tabs"
-          :style="{ width: notices.length === 0 ? '200px' : '360px' }"
+          :style="{ width: notices.length === 0 ? '200px' : '400px' }"
         >
           <el-empty
             v-if="notices.length === 0"
@@ -138,7 +164,7 @@ const onVisibleChange = (val: boolean) => {
           <span v-else>
             <template v-for="item in notices" :key="item.key">
               <el-tab-pane :label="getLabel(item)" :name="`${item.key}`">
-                <el-scrollbar max-height="330px">
+                <el-scrollbar max-height="400px">
                   <div class="noticeList-container">
                     <NoticeList :list="item.list" :emptyText="item.emptyText" />
                   </div>

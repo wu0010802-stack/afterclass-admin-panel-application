@@ -12,3 +12,7 @@ export const markInquiryRead = (id: number) => {
 export const deleteInquiry = (id: number) => {
     return http.request("delete", `/admin/inquiry/${id}`);
 };
+
+export const getRegistrationChanges = () => {
+    return http.request("get", "/admin/registration-changes");
+};
