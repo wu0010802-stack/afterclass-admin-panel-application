@@ -73,7 +73,8 @@ const fetchData = async () => {
             course_names: r.course_names ? String(r.course_names) : "",
             remark: r.remark || "",
             type: r.type,
-            status: r.status
+            status: r.status,
+            is_paid: r.is_paid
         }));
     } catch (e) {
         console.error("Error fetching registrations:", e);
