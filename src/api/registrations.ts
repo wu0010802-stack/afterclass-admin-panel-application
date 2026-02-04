@@ -25,6 +25,12 @@ export const togglePayment = (id: number, data: { paid: boolean }) => {
     return http.request("put", `/admin/registration/${id}/payment`, { data });
 };
 
-export const updateRegistration = (id: number, data: { student_name?: string; birthday?: string; class_name?: string }) => {
+export const updateRegistration = (id: number, data: {
+    student_name?: string;
+    birthday?: string;
+    class_name?: string;
+    courses?: { name: string, price: number }[];
+    supplies?: { name: string, price: number }[];
+}) => {
     return http.request("put", `/admin/registration/${id}`, { data });
 };

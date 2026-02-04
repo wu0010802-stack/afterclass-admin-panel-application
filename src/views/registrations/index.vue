@@ -33,8 +33,19 @@ const isEditing = ref(false);
 const editForm = reactive({
   student_name: "",
   birthday: "",
-  class_name: ""
+  class_name: "",
+  courses: [] as {name: string, price: number}[],
+  supplies: [] as {name: string, price: number}[]
 });
+
+// Available supplies (hardcoded like in frontend-public)
+const supplyOptions = ref([
+  { name: '全套舞蹈服裝', price: 1400 },
+  { name: '舞衣', price: 700 },
+  { name: '舞鞋', price: 250 },
+  { name: '舞襪', price: 150 },
+  { name: '舞袋', price: 300 }
+]);
 
 const filteredRegistrations = computed(() => {
   let result = registrations.value;
@@ -134,6 +145,8 @@ const handleView = async (row: any) => {
     editForm.student_name = res.student_name || "";
     editForm.birthday = res.birthday || "";
     editForm.class_name = res.class_name || "";
+    editForm.courses = (res.courses || []).map((c: any) => ({ name: c.name, price: c.price }));
+    editForm.supplies = (res.supplies || []).map((s: any) => ({ name: s.name, price: s.price }));
   } finally {
     detailLoading.value = false;
   }
@@ -199,6 +212,37 @@ const cancelEditing = () => {
   editForm.student_name = currentDetail.value.student_name || "";
   editForm.birthday = currentDetail.value.birthday || "";
   editForm.class_name = currentDetail.value.class_name || "";
+  editForm.courses = (currentDetail.value.courses || []).map((c: any) => ({ name: c.name, price: c.price }));
+  editForm.supplies = (currentDetail.value.supplies || []).map((s: any) => ({ name: s.name, price: s.price }));
+};
+
+// Helper functions for course/supply editing
+const isCourseSelected = (courseName: string) => {
+  return editForm.courses.some(c => c.name === courseName);
+};
+
+const toggleCourse = (course: {name: string, id: number}) => {
+  const index = editForm.courses.findIndex(c => c.name === course.name);
+  if (index >= 0) {
+    editForm.courses.splice(index, 1);
+  } else {
+    // Get price from courseOptions
+    const courseData = courseOptions.value.find(c => c.name === course.name);
+    editForm.courses.push({ name: course.name, price: (courseData as any)?.price || 0 });
+  }
+};
+
+const isSupplySelected = (supplyName: string) => {
+  return editForm.supplies.some(s => s.name === supplyName);
+};
+
+const toggleSupply = (supply: {name: string, price: number}) => {
+  const index = editForm.supplies.findIndex(s => s.name === supply.name);
+  if (index >= 0) {
+    editForm.supplies.splice(index, 1);
+  } else {
+    editForm.supplies.push({ name: supply.name, price: supply.price });
+  }
 };
 
 const saveEditing = async () => {
@@ -206,7 +250,9 @@ const saveEditing = async () => {
     await updateRegistration(currentDetail.value.id, {
       student_name: editForm.student_name,
       birthday: editForm.birthday,
-      class_name: editForm.class_name
+      class_name: editForm.class_name,
+      courses: editForm.courses,
+      supplies: editForm.supplies
     });
     message("更新成功", { type: "success" });
     
@@ -214,11 +260,16 @@ const saveEditing = async () => {
     currentDetail.value.student_name = editForm.student_name;
     currentDetail.value.birthday = editForm.birthday;
     currentDetail.value.class_name = editForm.class_name;
+    currentDetail.value.courses = [...editForm.courses];
+    currentDetail.value.supplies = [...editForm.supplies];
     
     isEditing.value = false;
     
     // Refresh the list
     await fetchData();
+    // Re-fetch detail to get updated total
+    const res: any = await getRegistrationDetail(currentDetail.value.id);
+    currentDetail.value = res;
   } catch (e) {
     message("更新失敗", { type: "error" });
   }
@@ -480,18 +531,49 @@ onMounted(() => {
             
             <div class="mt-4">
                 <h4 class="font-bold mb-2">已報名課程</h4>
-                <el-table :data="currentDetail.courses || []" border size="small">
+                <!-- View Mode -->
+                <el-table v-if="!isEditing" :data="currentDetail.courses || []" border size="small">
                     <el-table-column prop="name" label="課程名稱" />
                     <el-table-column prop="price" label="價格" width="100" />
                 </el-table>
+                <!-- Edit Mode -->
+                <div v-else class="border rounded p-3 bg-gray-50">
+                    <el-checkbox-group>
+                        <div v-for="course in courseOptions" :key="course.id" class="mb-2">
+                            <el-checkbox 
+                                :checked="isCourseSelected(course.name)"
+                                @change="toggleCourse(course)"
+                            >
+                                {{ course.name }}
+                            </el-checkbox>
+                        </div>
+                    </el-checkbox-group>
+                </div>
             </div>
 
-            <div class="mt-4" v-if="currentDetail.supplies && currentDetail.supplies.length > 0">
+            <div class="mt-4">
                 <h4 class="font-bold mb-2">已訂購用品</h4>
-                <el-table :data="currentDetail.supplies" border size="small">
-                    <el-table-column prop="name" label="用品名稱" />
-                    <el-table-column prop="price" label="價格" width="100" />
-                </el-table>
+                <!-- View Mode -->
+                <template v-if="!isEditing">
+                    <el-table v-if="currentDetail.supplies && currentDetail.supplies.length > 0" :data="currentDetail.supplies" border size="small">
+                        <el-table-column prop="name" label="用品名稱" />
+                        <el-table-column prop="price" label="價格" width="100" />
+                    </el-table>
+                    <div v-else class="text-gray-400">無</div>
+                </template>
+                <!-- Edit Mode -->
+                <div v-else class="border rounded p-3 bg-gray-50">
+                    <el-checkbox-group>
+                        <div v-for="supply in supplyOptions" :key="supply.name" class="mb-2">
+                            <el-checkbox 
+                                :checked="isSupplySelected(supply.name)"
+                                @change="toggleSupply(supply)"
+                            >
+                                {{ supply.name }} (${{ supply.price }})
+                            </el-checkbox>
+                        </div>
+                    </el-checkbox-group>
+                </div>
             </div>
             
              <div class="mt-4 text-right">
