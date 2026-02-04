@@ -24,3 +24,7 @@ export const updateRemark = (id: number, data: { remark: string }) => {
 export const togglePayment = (id: number, data: { paid: boolean }) => {
     return http.request("put", `/admin/registration/${id}/payment`, { data });
 };
+
+export const updateRegistration = (id: number, data: { student_name?: string; birthday?: string; class_name?: string }) => {
+    return http.request("put", `/admin/registration/${id}`, { data });
+};

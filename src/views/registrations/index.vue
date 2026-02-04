@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
-import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail, updateRemark, togglePayment } from "@/api/registrations";
+import { getRegistrations, deleteRegistration, deleteWaitlist, getRegistrationDetail, updateRemark, togglePayment, updateRegistration } from "@/api/registrations";
 import { getClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { message } from "@/utils/message";
@@ -9,6 +9,7 @@ import Search from "@iconify-icons/ep/search";
 import Delete from "@iconify-icons/ep/delete";
 import View from "@iconify-icons/ep/view";
 import Download from "@iconify-icons/ep/download";
+import EditPen from "@iconify-icons/ep/edit-pen";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import * as XLSX from "xlsx";
 
@@ -26,6 +27,14 @@ const courseOptions = ref<{id: number, name: string}[]>([]);
 const detailVisible = ref(false);
 const currentDetail = ref<any>({});
 const detailLoading = ref(false);
+
+// Edit mode state
+const isEditing = ref(false);
+const editForm = reactive({
+  student_name: "",
+  birthday: "",
+  class_name: ""
+});
 
 const filteredRegistrations = computed(() => {
   let result = registrations.value;
@@ -117,19 +126,24 @@ const fetchData = async () => {
 const handleView = async (row: any) => {
   detailVisible.value = true;
   detailLoading.value = true;
+  isEditing.value = false;
   try {
     const res: any = await getRegistrationDetail(row.id);
     currentDetail.value = res;
+    // Initialize edit form with current values
+    editForm.student_name = res.student_name || "";
+    editForm.birthday = res.birthday || "";
+    editForm.class_name = res.class_name || "";
   } finally {
     detailLoading.value = false;
   }
 };
 
-const handleDelete = (row: any) => {
-  const isWaitlist = row.type === 'waitlist';
+const handleDeleteFromDetail = () => {
+  const isWaitlist = currentDetail.value.type === 'waitlist';
   const msg = isWaitlist 
-    ? `確定要刪除 ${row.student_name} 的候補資料嗎？` 
-    : `確定要刪除 ${row.student_name} 的報名資料嗎？`;
+    ? `確定要刪除 ${currentDetail.value.student_name} 的候補資料嗎？` 
+    : `確定要刪除 ${currentDetail.value.student_name} 的報名資料嗎？`;
     
   ElMessageBox.confirm(msg, "警告", {
     confirmButtonText: "確定",
@@ -137,11 +151,12 @@ const handleDelete = (row: any) => {
     type: "warning"
   }).then(async () => {
     if (isWaitlist) {
-        await deleteWaitlist(row.id);
+        await deleteWaitlist(currentDetail.value.id);
     } else {
-        await deleteRegistration(row.id);
+        await deleteRegistration(currentDetail.value.id);
     }
     message("刪除成功", { type: "success" });
+    detailVisible.value = false;
     fetchData();
   });
 };
@@ -172,6 +187,41 @@ const handlePayment = async (row: any) => {
         console.error("Payment toggle failed:", e);
         message("更新失敗", { type: "error" });
     }
+};
+
+const startEditing = () => {
+  isEditing.value = true;
+};
+
+const cancelEditing = () => {
+  isEditing.value = false;
+  // Reset form to original values
+  editForm.student_name = currentDetail.value.student_name || "";
+  editForm.birthday = currentDetail.value.birthday || "";
+  editForm.class_name = currentDetail.value.class_name || "";
+};
+
+const saveEditing = async () => {
+  try {
+    await updateRegistration(currentDetail.value.id, {
+      student_name: editForm.student_name,
+      birthday: editForm.birthday,
+      class_name: editForm.class_name
+    });
+    message("更新成功", { type: "success" });
+    
+    // Update currentDetail
+    currentDetail.value.student_name = editForm.student_name;
+    currentDetail.value.birthday = editForm.birthday;
+    currentDetail.value.class_name = editForm.class_name;
+    
+    isEditing.value = false;
+    
+    // Refresh the list
+    await fetchData();
+  } catch (e) {
+    message("更新失敗", { type: "error" });
+  }
 };
 
 const handleExportExcel = () => {
@@ -366,15 +416,13 @@ onMounted(() => {
             </template>
         </el-table-column>
         <el-table-column prop="remark" label="備註" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="80" fixed="right">
           <template #default="scope">
             <el-button 
-                v-if="scope.row.type === 'registration'"
                 link type="primary" 
                 :icon="View" 
                 @click="handleView(scope.row)"
             >詳細</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(scope.row)">刪除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -382,12 +430,40 @@ onMounted(() => {
 
     <el-dialog v-model="detailVisible" title="報名詳細資料" width="600px">
         <div v-loading="detailLoading" v-if="currentDetail">
-            <el-descriptions border :column="1">
+            <!-- View Mode -->
+            <el-descriptions v-if="!isEditing" border :column="1">
                 <el-descriptions-item label="學生姓名">{{ currentDetail.student_name }}</el-descriptions-item>
+                <el-descriptions-item label="生日">{{ currentDetail.birthday || '未填寫' }}</el-descriptions-item>
                 <el-descriptions-item label="班級">{{ currentDetail.class_name || '未指定' }}</el-descriptions-item>
                 <el-descriptions-item label="Email">{{ currentDetail.email || '無' }}</el-descriptions-item>
                 <el-descriptions-item label="報名時間">{{ currentDetail.created_at ? new Date(currentDetail.created_at).toLocaleString() : '' }}</el-descriptions-item>
             </el-descriptions>
+            
+            <!-- Edit Mode -->
+            <el-form v-else label-width="100px">
+                <el-form-item label="學生姓名">
+                    <el-input v-model="editForm.student_name" />
+                </el-form-item>
+                <el-form-item label="生日">
+                    <el-date-picker 
+                        v-model="editForm.birthday" 
+                        type="date" 
+                        placeholder="選擇生日"
+                        value-format="YYYY-MM-DD"
+                        style="width: 100%"
+                    />
+                </el-form-item>
+                <el-form-item label="班級">
+                    <el-select v-model="editForm.class_name" placeholder="選擇班級" clearable style="width: 100%">
+                        <el-option 
+                            v-for="cls in classOptions" 
+                            :key="cls.id" 
+                            :label="cls.name" 
+                            :value="cls.name" 
+                        />
+                    </el-select>
+                </el-form-item>
+            </el-form>
             
             <div class="mt-4">
                 <div class="flex items-center mb-2">
@@ -422,6 +498,28 @@ onMounted(() => {
                 <h3 class="text-xl font-bold text-red-500">總金額: ${{ currentDetail.total_amount }}</h3>
             </div>
         </div>
+        
+        <template #footer>
+            <div class="flex justify-between">
+                <div>
+                    <el-button type="danger" @click="handleDeleteFromDetail" :icon="Delete">
+                        刪除報名
+                    </el-button>
+                </div>
+                <div>
+                    <template v-if="!isEditing">
+                        <el-button type="primary" @click="startEditing" :icon="EditPen">
+                            編輯資料
+                        </el-button>
+                        <el-button @click="detailVisible = false">關閉</el-button>
+                    </template>
+                    <template v-else>
+                        <el-button @click="cancelEditing">取消</el-button>
+                        <el-button type="primary" @click="saveEditing">儲存變更</el-button>
+                    </template>
+                </div>
+            </div>
+        </template>
     </el-dialog>
   </div>
 </template>
