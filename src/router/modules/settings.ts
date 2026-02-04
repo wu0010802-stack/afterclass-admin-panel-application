@@ -13,7 +13,7 @@ export default {
     },
     children: [
         {
-            path: "index",
+            path: "/settings/index",
             name: "SystemSettings",
             component: () => import("@/views/settings/index.vue"),
             meta: {

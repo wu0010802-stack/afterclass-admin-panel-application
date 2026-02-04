@@ -13,7 +13,7 @@ export default {
     },
     children: [
         {
-            path: "index",
+            path: "/classes/index",
             name: "ClassesList",
             component: () => import("@/views/classes/index.vue"),
             meta: {
