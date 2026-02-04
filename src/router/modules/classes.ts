@@ -5,6 +5,8 @@ export default {
     path: "/classes",
     component: Layout,
     meta: {
+        title: "班級管理",
+        icon: "ep/school",
         rank: 3
     },
     children: [
