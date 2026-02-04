@@ -3,15 +3,17 @@ const Layout = () => import("@/layout/index.vue");
 
 export default {
     path: "/courses",
+    name: "Courses",
     component: Layout,
+    redirect: "/courses/index",
     meta: {
         title: "課程管理",
         icon: "ep/collection",
-        rank: 2
+        rank: 1
     },
     children: [
         {
-            path: "",
+            path: "index",
             name: "CoursesList",
             component: () => import("@/views/courses/index.vue"),
             meta: {
