@@ -21,8 +21,7 @@ const fetchData = async () => {
             description: `班級：${reg.class_name}`,
             datetime: reg.created_at?.split('T')[0] || '',
             type: "1",
-            // Store raw created_at for comparison, removing microseconds to avoid parsing issues and adding Z (UTC)
-            rawDate: reg.created_at ? (reg.created_at.split('.')[0] + 'Z') : ''
+            rawDate: reg.created_at || ''
         }));
 
         notices.value = [
