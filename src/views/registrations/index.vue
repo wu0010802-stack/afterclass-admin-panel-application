@@ -429,7 +429,11 @@ onMounted(() => {
       </template>
 
       <el-table :data="filteredRegistrations" v-loading="loading" style="width: 100%">
-        <el-table-column type="index" label="序號" width="60" align="center" />
+        <el-table-column label="序號" width="60" align="center">
+            <template #default="scope">
+                {{ filteredRegistrations.length - scope.$index }}
+            </template>
+        </el-table-column>
         <el-table-column prop="student_name" label="學生姓名" min-width="100" />
         <el-table-column prop="birthday" label="生日" width="120">
              <template #default="scope">
