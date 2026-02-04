@@ -517,9 +517,8 @@ onMounted(() => {
             </el-form>
             
             <div class="mt-4">
-                <div class="flex items-center mb-2">
-                    <span class="font-bold mr-2">後台備註</span>
-                    <el-button type="primary" link size="small" @click="handleUpdateRemark">更新備註</el-button>
+                <div class="mb-2">
+                    <span class="font-bold">後台備註</span>
                 </div>
                 <el-input 
                     v-model="currentDetail.remark" 
@@ -527,6 +526,11 @@ onMounted(() => {
                     :rows="2" 
                     placeholder="輸入備註事項..." 
                 />
+                <div class="mt-2">
+                    <el-button type="warning" size="small" @click="handleUpdateRemark">
+                        💾 點擊儲存備註
+                    </el-button>
+                </div>
             </div>
             
             <div class="mt-4">
