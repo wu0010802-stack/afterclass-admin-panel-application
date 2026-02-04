@@ -146,11 +146,11 @@ const stretchTypeOptions = computed<Array<OptionsType>>(() => {
   return [
     {
       label: "固定",
-      tip: "紧凑页面，轻松找到所需信息",
+      tip: "緊湊頁面，輕鬆找到所需信息",
       value: "fixed"
     },
     {
-      label: "自定义",
+      label: "自定義",
       tip: "最小1280、最大1600",
       value: "custom"
     }
@@ -193,24 +193,24 @@ const pClass = computed(() => {
 const themeOptions = computed<Array<OptionsType>>(() => {
   return [
     {
-      label: "浅色",
+      label: "淺色",
       icon: DayIcon,
       theme: "light",
-      tip: "清新启航，点亮舒适的工作界面",
+      tip: "清新啟航，點亮舒適的工作界面",
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     },
     {
       label: "深色",
       icon: DarkIcon,
       theme: "dark",
-      tip: "月光序曲，沉醉于夜的静谧雅致",
+      tip: "月光序曲，沉醉於夜的靜謐雅緻",
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     },
     {
-      label: "自动",
+      label: "自動",
       icon: SystemIcon,
       theme: "system",
-      tip: "同步时光，界面随晨昏自然呼应",
+      tip: "同步時光，界面隨晨昏自然呼應",
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     }
   ];
@@ -219,18 +219,18 @@ const themeOptions = computed<Array<OptionsType>>(() => {
 const markOptions = computed<Array<OptionsType>>(() => {
   return [
     {
-      label: "灵动",
-      tip: "灵动标签，添趣生辉",
+      label: "靈動",
+      tip: "靈動標籤，添趣生輝",
       value: "smart"
     },
     {
       label: "卡片",
-      tip: "卡片标签，高效浏览",
+      tip: "卡片標籤，高效瀏覽",
       value: "card"
     },
     {
       label: "谷歌",
-      tip: "谷歌风格，经典美观",
+      tip: "谷歌風格，經典美觀",
       value: "chrome"
     }
   ];
@@ -315,7 +315,7 @@ onUnmounted(() => removeMatchMedia);
 <template>
   <LayPanel>
     <div class="p-5">
-      <p :class="pClass">整体风格</p>
+      <p :class="pClass">整體風格</p>
       <Segmented
         resize
         class="select-none"
@@ -333,7 +333,7 @@ onUnmounted(() => removeMatchMedia);
         "
       />
 
-      <p :class="['mt-5!', pClass]">主题色</p>
+      <p :class="['mt-5!', pClass]">主題色</p>
       <ul class="theme-color">
         <li
           v-for="(item, index) in themeColors"
@@ -352,12 +352,12 @@ onUnmounted(() => removeMatchMedia);
         </li>
       </ul>
 
-      <p :class="['mt-5!', pClass]">导航模式</p>
+      <p :class="['mt-5!', pClass]">導航模式</p>
       <ul class="pure-theme">
         <li
           ref="verticalRef"
           v-tippy="{
-            content: '左侧菜单，亲切熟悉',
+            content: '左側菜單，親切熟悉',
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'vertical' ? 'is-select' : ''"
@@ -370,7 +370,7 @@ onUnmounted(() => removeMatchMedia);
           v-if="device !== 'mobile'"
           ref="horizontalRef"
           v-tippy="{
-            content: '顶部菜单，简洁概览',
+            content: '頂部菜單，簡潔概覽',
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'horizontal' ? 'is-select' : ''"
@@ -383,7 +383,7 @@ onUnmounted(() => removeMatchMedia);
           v-if="device !== 'mobile'"
           ref="mixRef"
           v-tippy="{
-            content: '混合菜单，灵活多变',
+            content: '混合菜單，靈活多變',
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'mix' ? 'is-select' : ''"
@@ -395,7 +395,7 @@ onUnmounted(() => removeMatchMedia);
       </ul>
 
       <span v-if="useAppStoreHook().getViewportWidth > 1280">
-        <p :class="['mt-5!', pClass]">页宽</p>
+        <p :class="['mt-5!', pClass]">頁寬</p>
         <Segmented
           resize
           class="mb-2 select-none"
@@ -436,7 +436,7 @@ onUnmounted(() => removeMatchMedia);
         </button>
       </span>
 
-      <p :class="['mt-4!', pClass]">页签风格</p>
+      <p :class="['mt-4!', pClass]">頁籤風格</p>
       <Segmented
         resize
         class="select-none"
@@ -445,15 +445,15 @@ onUnmounted(() => removeMatchMedia);
         @change="onChange"
       />
 
-      <p class="mt-5! font-medium text-sm dark:text-white">界面显示</p>
+      <p class="mt-5! font-medium text-sm dark:text-white">界面顯示</p>
       <ul class="setting">
         <li>
           <span class="dark:text-white">灰色模式</span>
           <el-switch
             v-model="settings.greyVal"
             inline-prompt
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="greyChange"
           />
         </li>
@@ -462,28 +462,28 @@ onUnmounted(() => removeMatchMedia);
           <el-switch
             v-model="settings.weakVal"
             inline-prompt
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="weekChange"
           />
         </li>
         <li>
-          <span class="dark:text-white">隐藏标签页</span>
+          <span class="dark:text-white">隱藏標籤頁</span>
           <el-switch
             v-model="settings.tabsVal"
             inline-prompt
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="tagsChange"
           />
         </li>
         <li>
-          <span class="dark:text-white">隐藏页脚</span>
+          <span class="dark:text-white">隱藏頁腳</span>
           <el-switch
             v-model="settings.hideFooter"
             inline-prompt
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="hideFooterChange"
           />
         </li>
@@ -494,18 +494,18 @@ onUnmounted(() => removeMatchMedia);
             inline-prompt
             :active-value="true"
             :inactive-value="false"
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="logoChange"
           />
         </li>
         <li>
-          <span class="dark:text-white">页签持久化</span>
+          <span class="dark:text-white">頁籤持久化</span>
           <el-switch
             v-model="settings.multiTagsCache"
             inline-prompt
-            active-text="开"
-            inactive-text="关"
+            active-text="開"
+            inactive-text="關"
             @change="multiTagsCacheChange"
           />
         </li>
